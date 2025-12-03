@@ -1,0 +1,17 @@
+# Docker-spezifische Dateien
+*.pyc
+__pycache__/
+.git/
+.gitignore
+.venv/
+*.md
+!SYNOLOGY_ANLEITUNG.md
+
+# Lokale Entwicklungsdateien
+.streamlit/
+*.log
+.env.local
+
+# Temporäre Dateien
+*.tmp
+*.bak

@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  kpi-dashboard:
+    build: .
+    container_name: kpi-dashboard
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    volumes:
+      # Persistente Datenbank
+      - kpi_data:/data
+      # Optional: CSV-Dateien für Migration
+      - ./monatsdaten:/data/monatsdaten:ro
+    environment:
+      - DATABASE_PATH=/data/kpi_dashboard.db
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-dispo2025}
+      - USER_PASSWORD=${USER_PASSWORD:-kpi123}
+      - TZ=Europe/Berlin
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  kpi_data:
+    driver: local

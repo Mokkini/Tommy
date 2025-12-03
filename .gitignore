@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# Streamlit
+.streamlit/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data files (optional - auskommentieren wenn CSVs versioniert werden sollen)
+# monatsdaten/*.csv
+# *.csv
+
+# Backups
+*_backup.py
+*_v*.py
+
+# ngrok
+ngrok.exe
+ngrok
+
+# Excel/CSV temporär
+~$*.xlsx
+~$*.csv
+*.tmp
