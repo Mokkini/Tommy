@@ -243,6 +243,9 @@ if page == "📋 Eingabemaske":
     df_display = df.copy()
     for col in df_display.columns:
         df_display[col] = df_display[col].astype(str).replace('nan', '').replace('None', '')
+        # Entferne unnötige .0 bei ganzen Zahlen
+        if col in ['Fahrzeuge', 'Stopps', 'Unverplante Stopps', 'Kosten Fuhrpark', 'Stoppschnitt', 'Stoppkosten']:
+            df_display[col] = df_display[col].apply(lambda x: x.rstrip('0').rstrip('.') if '.' in str(x) and x not in ['', 'nan', 'None'] else x)
     
     # Column Config
     column_config = {
@@ -276,11 +279,17 @@ if page == "📋 Eingabemaske":
             stopps = pd.to_numeric(str(edited_df.at[idx, 'Stopps']).replace(',', '.'), errors='coerce')
             kosten = pd.to_numeric(str(edited_df.at[idx, 'Kosten Fuhrpark']).replace(',', '.'), errors='coerce')
             
+            # Stoppschnitt berechnen oder löschen
             if pd.notna(fahrzeuge) and pd.notna(stopps) and fahrzeuge > 0:
                 edited_df.at[idx, 'Stoppschnitt'] = str(round(stopps / fahrzeuge, 1)).replace('.', ',')
+            else:
+                edited_df.at[idx, 'Stoppschnitt'] = ''
             
+            # Stoppkosten berechnen oder löschen
             if pd.notna(kosten) and pd.notna(stopps) and stopps > 0:
                 edited_df.at[idx, 'Stoppkosten'] = str(round(kosten / stopps, 2)).replace('.', ',')
+            else:
+                edited_df.at[idx, 'Stoppkosten'] = ''
         except:
             pass
     
@@ -338,16 +347,16 @@ elif page == "📊 Daily Report":
             col1, col2 = st.columns(2)
             
             with col1:
-                st.markdown("**🟢 TOP 5 - Niedrigste Stoppkosten**")
-                top5 = df_latest.nsmallest(5, 'Stoppkosten')[['Standort', 'Stoppkosten', 'Stopps']]
-                top5['Stoppkosten'] = top5['Stoppkosten'].apply(lambda x: f"{x:.2f} €")
-                st.dataframe(top5, hide_index=True)
+                st.markdown("**🟢 TOP 3 - Niedrigste Stoppkosten**")
+                top3 = df_latest.nsmallest(3, 'Stoppkosten')[['Standort', 'Stoppkosten', 'Stopps']]
+                top3['Stoppkosten'] = top3['Stoppkosten'].apply(lambda x: f"{x:.2f} €")
+                st.dataframe(top3, hide_index=True)
             
             with col2:
-                st.markdown("**🔴 BOTTOM 5 - Höchste Stoppkosten**")
-                bottom5 = df_latest.nlargest(5, 'Stoppkosten')[['Standort', 'Stoppkosten', 'Stopps']]
-                bottom5['Stoppkosten'] = bottom5['Stoppkosten'].apply(lambda x: f"{x:.2f} €")
-                st.dataframe(bottom5, hide_index=True)
+                st.markdown("**🔴 BOTTOM 3 - Höchste Stoppkosten**")
+                bottom3 = df_latest.nlargest(3, 'Stoppkosten')[['Standort', 'Stoppkosten', 'Stopps']]
+                bottom3['Stoppkosten'] = bottom3['Stoppkosten'].apply(lambda x: f"{x:.2f} €")
+                st.dataframe(bottom3, hide_index=True)
         else:
             st.info("Keine Daten mit KPI-Werten vorhanden.")
     else:

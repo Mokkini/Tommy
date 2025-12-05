@@ -5,93 +5,112 @@ import sqlite3
 import pandas as pd
 from datetime import datetime
 import os
+import time
 
 DATABASE_PATH = os.environ.get('DATABASE_PATH', '/data/kpi_dashboard.db')
 
 def get_connection():
-    """Erstellt eine Datenbankverbindung."""
-    conn = sqlite3.connect(DATABASE_PATH, check_same_thread=False)
+    """Erstellt eine Datenbankverbindung mit Timeout und WAL-Modus."""
+    conn = sqlite3.connect(
+        DATABASE_PATH, 
+        check_same_thread=False,
+        timeout=30.0,  # 30 Sekunden warten bei Lock
+        isolation_level=None  # Autocommit-Modus
+    )
     conn.row_factory = sqlite3.Row
+    # WAL-Modus für bessere Concurrency
+    conn.execute('PRAGMA journal_mode=WAL')
+    conn.execute('PRAGMA busy_timeout=30000')
     return conn
 
 def init_database():
     """Initialisiert die Datenbank mit allen Tabellen."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    
-    # KPI-Daten Tabelle
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS kpi_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            datum DATE NOT NULL,
-            monat TEXT NOT NULL,
-            standort TEXT NOT NULL,
-            disponent TEXT,
-            fahrzeuge INTEGER,
-            stopps INTEGER,
-            unverplante_stopps REAL,
-            kosten_fuhrpark REAL,
-            stoppschnitt REAL,
-            stoppkosten REAL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(datum, standort)
-        )
-    ''')
-    
-    # Standorte Tabelle
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS standorte (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL,
-            aktiv INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # Disponenten Tabelle
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS disponenten (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL,
-            standort_id INTEGER,
-            aktiv INTEGER DEFAULT 1,
-            FOREIGN KEY (standort_id) REFERENCES standorte(id)
-        )
-    ''')
-    
-    # User Tabelle für Login
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT DEFAULT 'user',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # History/Audit Log
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS audit_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            action TEXT NOT NULL,
-            table_name TEXT,
-            record_id INTEGER,
-            old_values TEXT,
-            new_values TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # Index für schnellere Abfragen
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_kpi_datum ON kpi_data(datum)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_kpi_monat ON kpi_data(monat)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_kpi_standort ON kpi_data(standort)')
-    
-    conn.commit()
-    conn.close()
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            # KPI-Daten Tabelle
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS kpi_data (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    datum DATE NOT NULL,
+                    monat TEXT NOT NULL,
+                    standort TEXT NOT NULL,
+                    disponent TEXT,
+                    fahrzeuge INTEGER,
+                    stopps INTEGER,
+                    unverplante_stopps REAL,
+                    kosten_fuhrpark REAL,
+                    stoppschnitt REAL,
+                    stoppkosten REAL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(datum, standort)
+                )
+            ''')
+            
+            # Standorte Tabelle
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS standorte (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL,
+                    aktiv INTEGER DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Disponenten Tabelle
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS disponenten (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL,
+                    standort_id INTEGER,
+                    aktiv INTEGER DEFAULT 1,
+                    FOREIGN KEY (standort_id) REFERENCES standorte(id)
+                )
+            ''')
+            
+            # User Tabelle für Login
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    role TEXT DEFAULT 'user',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # History/Audit Log
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS audit_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    action TEXT NOT NULL,
+                    table_name TEXT,
+                    record_id INTEGER,
+                    old_values TEXT,
+                    new_values TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Index für schnellere Abfragen
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_kpi_datum ON kpi_data(datum)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_kpi_monat ON kpi_data(monat)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_kpi_standort ON kpi_data(standort)')
+            
+            conn.commit()
+            conn.close()
+            return  # Erfolgreich, beende Funktion
+            
+        except sqlite3.OperationalError as e:
+            if "locked" in str(e) and attempt < max_retries - 1:
+                time.sleep(1)  # Warte 1 Sekunde und versuche erneut
+                continue
+            raise
 
 def get_months():
     """Gibt alle verfügbaren Monate zurück."""

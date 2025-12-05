@@ -1,19 +1,24 @@
 """
 Einfache Authentifizierung für KPI Dashboard
+
+WICHTIG: Passwörter werden NUR über Umgebungsvariablen gesetzt!
+Diese werden in docker-compose.yml definiert:
+  - ADMIN_PASSWORD: Passwort für Admin-Benutzer
+  - USER_PASSWORD: Passwort für Dispo-Benutzer
 """
 import streamlit as st
 import hashlib
 import os
 
-# Standard-Benutzer mit Rollen (kann über Umgebungsvariablen überschrieben werden)
-# Format: {username: {"password": "...", "role": "admin|disponent"}}
+# Benutzer mit Rollen - Passwörter kommen aus Umgebungsvariablen (docker-compose.yml)
+# Keine Fallback-Passwörter im Code für bessere Sicherheit
 DEFAULT_USERS = {
     "admin": {
-        "password": os.environ.get("ADMIN_PASSWORD", "dispo2025"),
+        "password": os.environ.get("ADMIN_PASSWORD"),
         "role": "admin"
     },
     "dispo": {
-        "password": os.environ.get("USER_PASSWORD", "kpi123"),
+        "password": os.environ.get("USER_PASSWORD"),
         "role": "disponent"
     },
 }

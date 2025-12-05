@@ -14,8 +14,12 @@ services:
       - ./monatsdaten:/data/monatsdaten:ro
     environment:
       - DATABASE_PATH=/data/kpi_dashboard.db
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-dispo2025}
-      - USER_PASSWORD=${USER_PASSWORD:-kpi123}
+      # ============================================
+      # PASSWÖRTER - Einzige Stelle für Passwörter!
+      # ============================================
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-tboehler2025}   # Benutzer: admin
+      - USER_PASSWORD=${USER_PASSWORD:-Dispo2025}        # Benutzer: dispo
+      # ============================================
       - TZ=Europe/Berlin
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
