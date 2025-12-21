@@ -10,15 +10,22 @@ import streamlit as st
 import hashlib
 import os
 
-# Benutzer mit Rollen - Passwörter kommen aus Umgebungsvariablen (docker-compose.yml)
-# Keine Fallback-Passwörter im Code für bessere Sicherheit
+# Hilfsfunktion: Lädt Passwort aus Streamlit Secrets oder Umgebungsvariablen
+def get_password(key):
+    """Lädt Passwort aus Streamlit Secrets oder Umgebungsvariablen."""
+    try:
+        return st.secrets.get(key, os.environ.get(key))
+    except:
+        return os.environ.get(key)
+
+# Benutzer mit Rollen - Passwörter kommen aus Streamlit Secrets oder Umgebungsvariablen
 DEFAULT_USERS = {
     "admin": {
-        "password": os.environ.get("ADMIN_PASSWORD"),
+        "password": get_password("ADMIN_PASSWORD"),
         "role": "admin"
     },
     "dispo": {
-        "password": os.environ.get("USER_PASSWORD"),
+        "password": get_password("USER_PASSWORD"),
         "role": "disponent"
     },
 }

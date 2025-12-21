@@ -6,9 +6,13 @@ from psycopg2 import pool, extras
 import pandas as pd
 from datetime import datetime, timedelta
 import os
+import streamlit as st
 
-# Supabase Connection String (wird als ENV Variable gesetzt)
-DATABASE_URL = os.environ.get('DATABASE_URL', '')
+# Supabase Connection String (Streamlit Secrets oder ENV Variable)
+try:
+    DATABASE_URL = st.secrets.get('DATABASE_URL', '')
+except:
+    DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
 # Connection Pool für bessere Performance
 connection_pool = None
