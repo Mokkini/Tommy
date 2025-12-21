@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  kpi-dashboard:
+    build: .
+    container_name: kpi-dashboard
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    volumes:
+      # ======================================
+      # USB-VOLUME STATT VOLUME1 (DEFEKT!)
+      # ======================================
+      - /volumeUSB1/usbshare/kpi-dashboard/data:/data
+      # Optional: CSV-Dateien für Migration (von USB kopieren)
+      # - ./monatsdaten:/data/monatsdaten:ro
+    environment:
+      - DATABASE_PATH=/data/kpi_dashboard.db
+      # ============================================
+      # PASSWÖRTER - Einzige Stelle für Passwörter!
+      # ============================================
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-tboehler2025}   # Benutzer: admin
+      - USER_PASSWORD=${USER_PASSWORD:-Dispo2025}        # Benutzer: dispo
+      # ============================================
+      - TZ=Europe/Berlin
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
+
+# KEIN volumes: Abschnitt mehr - direktes Bind-Mount auf USB!
