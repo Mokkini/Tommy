@@ -14,6 +14,14 @@ try:
 except:
     DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
+# Debug: Zeige welche URL geladen wurde
+if DATABASE_URL:
+    # Verstecke Passwort für Logs
+    safe_url = DATABASE_URL.split('@')[0].split(':')[0] + ':***@' + DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else 'URL malformed'
+    print(f"🔗 DATABASE_URL loaded: {safe_url}")
+else:
+    print("❌ DATABASE_URL is empty!")
+
 # Connection Pool für bessere Performance
 connection_pool = None
 
@@ -21,6 +29,8 @@ def get_connection_pool():
     """Erstellt oder gibt den Connection Pool zurück."""
     global connection_pool
     if connection_pool is None:
+        if not DATABASE_URL:
+            raise ValueError("DATABASE_URL is not set! Check Streamlit Secrets or environment variables.")
         connection_pool = psycopg2.pool.SimpleConnectionPool(
             1, 10,  # Min/Max Connections
             DATABASE_URL
