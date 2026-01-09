@@ -44,8 +44,29 @@ DEFAULT_STANDORTE = [
 st.set_page_config(
     page_title="KPI Dashboard - Dispo",
     page_icon="📊",
-    layout="wide"
+    layout="wide",
+    menu_items={
+        "Get help": None,
+        "Report a bug": None,
+        "About": None
+    }
 )
+
+# CSS: Versteckt Streamlit-Menü, Header, Footer und Toolbar-Icons
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+header {visibility: hidden;}
+footer {visibility: hidden;}
+.stAppDeployButton {display: none;}
+.stAppViewBlockContainer > div:first-child {display: none;}
+button[title="View app source"] {display: none;}
+a[href*="github"] {display: none;}
+.viewerBadge_container__1QSob {display: none;}
+.styles_viewerBadge__1yB5_ {display: none;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # --- Authentifizierung ---
 require_auth()
