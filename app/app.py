@@ -535,7 +535,3 @@ elif page == "📉 Verlauf (KPIs)":
             st.altair_chart(chart, use_container_width=True)
     else:
         st.info("Keine Daten vorhanden.")
-
-# Footer
-st.sidebar.markdown("---")
-st.sidebar.caption("KPI Dashboard v2.0 | SQLite Edition")
