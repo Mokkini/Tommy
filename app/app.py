@@ -61,9 +61,12 @@ footer {visibility: hidden;}
 .stAppDeployButton {display: none;}
 .stAppViewBlockContainer > div:first-child {display: none;}
 button[title="View app source"] {display: none;}
+button[title="Manage app"] {display: none;}
 a[href*="github"] {display: none;}
 .viewerBadge_container__1QSob {display: none;}
 .styles_viewerBadge__1yB5_ {display: none;}
+[data-testid="stToolbar"] {display: none;}
+[data-testid="manage-app-button"] {display: none;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
