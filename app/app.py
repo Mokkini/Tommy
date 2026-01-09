@@ -77,6 +77,7 @@ button[kind="header"] {display: none !important;}
 /* Terminal Button (Manage app) - aus DevTools */
 button[class*="terminalButton"] {display: none !important;}
 .button_terminalButton_inx23_138 {display: none !important;}
+._terminalButton_rix23_138 {display: none !important;}
 button[aria-label*="Manage"] {display: none !important;}
 </style>
 """
