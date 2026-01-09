@@ -74,6 +74,10 @@ section[data-testid="stHeader"] {display: none !important;}
 div[data-testid="stToolbar"] {display: none !important;}
 button[kind="header"] {display: none !important;}
 .css-1dp5vir {display: none !important;}
+/* Terminal Button (Manage app) - aus DevTools */
+button[class*="terminalButton"] {display: none !important;}
+.button_terminalButton_inx23_138 {display: none !important;}
+button[aria-label*="Manage"] {display: none !important;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
