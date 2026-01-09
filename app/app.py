@@ -157,6 +157,23 @@ def get_week_number(date):
     """Gibt ISO-Wochennummer zurück."""
     return date.isocalendar()[1]
 
+def format_number_de(value, decimals=2):
+    """Formatiert Zahlen im deutschen Format (Komma als Dezimaltrennzeichen)."""
+    if pd.isna(value) or value == '':
+        return ''
+    try:
+        num = float(value)
+        if decimals == 0:
+            return f"{int(num):,}".replace(',', '.')
+        else:
+            formatted = f"{num:.{decimals}f}".replace('.', ',')
+            # Tausendertrennzeichen
+            parts = formatted.split(',')
+            parts[0] = f"{int(parts[0]):,}".replace(',', '.')
+            return ','.join(parts)
+    except:
+        return str(value)
+
 def compare_weeks(df):
     """Vergleicht KPIs wochenweise."""
     df = df.copy()
@@ -355,12 +372,12 @@ elif page == "📊 Daily Report":
             
             st.subheader(f"📅 {latest_date.strftime('%d.%m.%Y')}")
             
-            # KPIs
+            # KPIs mit deutscher Formatierung
             col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Ø Stoppkosten", f"{df_latest['Stoppkosten'].mean():.2f} €")
-            col2.metric("Gesamt Stopps", f"{int(df_latest['Stopps'].sum()):,}")
-            col3.metric("Fahrzeuge", f"{int(df_latest['Fahrzeuge'].sum())}")
-            col4.metric("Ø Stoppschnitt", f"{df_latest['Stoppschnitt'].mean():.1f}")
+            col1.metric("Ø Stoppkosten", f"{format_number_de(df_latest['Stoppkosten'].mean(), 2)} €")
+            col2.metric("Gesamt Stopps", format_number_de(int(df_latest['Stopps'].sum()), 0))
+            col3.metric("Fahrzeuge", format_number_de(int(df_latest['Fahrzeuge'].sum()), 0))
+            col4.metric("Ø Stoppschnitt", format_number_de(df_latest['Stoppschnitt'].mean(), 1))
             
             st.markdown("---")
             
@@ -369,14 +386,16 @@ elif page == "📊 Daily Report":
             
             with col1:
                 st.markdown("**🟢 TOP 3 - Niedrigste Stoppkosten**")
-                top3 = df_latest.nsmallest(3, 'Stoppkosten')[['Standort', 'Stoppkosten', 'Stopps']]
-                top3['Stoppkosten'] = top3['Stoppkosten'].apply(lambda x: f"{x:.2f} €")
+                top3 = df_latest.nsmallest(3, 'Stoppkosten')[['Standort', 'Stoppkosten', 'Stopps']].copy()
+                top3['Stoppkosten'] = top3['Stoppkosten'].apply(lambda x: f"{format_number_de(x, 2)} €")
+                top3['Stopps'] = top3['Stopps'].apply(lambda x: format_number_de(x, 0))
                 st.dataframe(top3, hide_index=True)
             
             with col2:
                 st.markdown("**🔴 BOTTOM 3 - Höchste Stoppkosten**")
-                bottom3 = df_latest.nlargest(3, 'Stoppkosten')[['Standort', 'Stoppkosten', 'Stopps']]
-                bottom3['Stoppkosten'] = bottom3['Stoppkosten'].apply(lambda x: f"{x:.2f} €")
+                bottom3 = df_latest.nlargest(3, 'Stoppkosten')[['Standort', 'Stoppkosten', 'Stopps']].copy()
+                bottom3['Stoppkosten'] = bottom3['Stoppkosten'].apply(lambda x: f"{format_number_de(x, 2)} €")
+                bottom3['Stopps'] = bottom3['Stopps'].apply(lambda x: format_number_de(x, 0))
                 st.dataframe(bottom3, hide_index=True)
         else:
             st.info("Keine Daten mit KPI-Werten vorhanden.")
@@ -392,13 +411,27 @@ elif page == "📈 Wochenvergleich":
         if not weekly_data.empty:
             st.subheader(f"KPIs pro Woche - {selected_month}")
             
-            # Formatiere Tabelle
+            # Formatiere Tabelle für deutsche Darstellung
             display_data = weekly_data.copy()
+            
+            # Formatiere numerische Spalten
+            display_data['Fahrzeuge'] = display_data['Fahrzeuge'].apply(lambda x: format_number_de(x, 1))
+            display_data['Stopps'] = display_data['Stopps'].apply(lambda x: format_number_de(x, 1))
+            display_data['Stoppschnitt'] = display_data['Stoppschnitt'].apply(lambda x: format_number_de(x, 2))
+            display_data['Unverplante Stopps'] = display_data['Unverplante Stopps'].apply(lambda x: format_number_de(x, 2))
+            display_data['Kosten Fuhrpark'] = display_data['Kosten Fuhrpark'].apply(lambda x: format_number_de(x, 2) + ' €' if x != '' else '')
+            display_data['Stoppkosten'] = display_data['Stoppkosten'].apply(lambda x: format_number_de(x, 2) + ' €' if x != '' else '')
+            
+            # Formatiere Delta-Spalten
             for col in display_data.columns:
                 if 'Delta%' in col:
-                    display_data[col] = display_data[col].apply(lambda x: f"{x:+.1f}%" if pd.notna(x) else "")
-                elif col in ['Stoppkosten']:
-                    display_data[col] = display_data[col].apply(lambda x: f"{x:.2f} €" if pd.notna(x) else "")
+                    display_data[col] = display_data[col].apply(lambda x: f"{x:+.1f}%".replace('.', ',') if pd.notna(x) else "")
+                elif 'Delta' in col and 'Delta%' not in col:
+                    # Absolute Delta-Werte
+                    if 'Kosten' in col or 'Stopp' in col:
+                        display_data[col] = display_data[col].apply(lambda x: ('+' if x > 0 else '') + format_number_de(x, 2) if pd.notna(x) else "")
+                    else:
+                        display_data[col] = display_data[col].apply(lambda x: ('+' if x > 0 else '') + format_number_de(x, 1) if pd.notna(x) else "")
             
             st.dataframe(display_data, hide_index=True, use_container_width=True)
             
@@ -461,7 +494,16 @@ elif page == "📅 Monatsvergleich":
                 comparison['Delta'] = comparison[month2] - comparison[month1]
                 comparison['Delta %'] = ((comparison[month2] / comparison[month1] - 1) * 100).round(1)
                 
-                st.dataframe(comparison, hide_index=True, use_container_width=True)
+                # Formatiere für Anzeige
+                display_comp = comparison.copy()
+                for col in [month1, month2, 'Delta']:
+                    display_comp[col] = display_comp.apply(
+                        lambda row: format_number_de(row[col], 2) if row['KPI'] in ['Stoppschnitt', 'Stoppkosten'] else format_number_de(row[col], 1),
+                        axis=1
+                    )
+                display_comp['Delta %'] = display_comp['Delta %'].apply(lambda x: f"{x:+.1f}%".replace('.', ',') if pd.notna(x) else "")
+                
+                st.dataframe(display_comp, hide_index=True, use_container_width=True)
     else:
         st.info("Mindestens 2 Monate benötigt.")
 
