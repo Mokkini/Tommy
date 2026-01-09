@@ -55,18 +55,25 @@ st.set_page_config(
 # CSS: Versteckt Streamlit-Menü, Header, Footer und Toolbar-Icons
 hide_streamlit_style = """
 <style>
-#MainMenu {visibility: hidden;}
-header {visibility: hidden;}
-footer {visibility: hidden;}
-.stAppDeployButton {display: none;}
-.stAppViewBlockContainer > div:first-child {display: none;}
-button[title="View app source"] {display: none;}
-button[title="Manage app"] {display: none;}
-a[href*="github"] {display: none;}
-.viewerBadge_container__1QSob {display: none;}
-.styles_viewerBadge__1yB5_ {display: none;}
-[data-testid="stToolbar"] {display: none;}
-[data-testid="manage-app-button"] {display: none;}
+#MainMenu {visibility: hidden !important;}
+header {visibility: hidden !important;}
+footer {visibility: hidden !important;}
+.stAppDeployButton {display: none !important;}
+.stAppViewBlockContainer > div:first-child {display: none !important;}
+button[title="View app source"] {display: none !important;}
+button[title="Manage app"] {display: none !important;}
+a[href*="github"] {display: none !important;}
+.viewerBadge_container__1QSob {display: none !important;}
+.styles_viewerBadge__1yB5_ {display: none !important;}
+[data-testid="stToolbar"] {display: none !important;}
+[data-testid="manage-app-button"] {display: none !important;}
+/* Zusätzliche Selektoren für Manage App Button */
+[data-testid="stHeader"] {display: none !important;}
+.stApp > header {display: none !important;}
+section[data-testid="stHeader"] {display: none !important;}
+div[data-testid="stToolbar"] {display: none !important;}
+button[kind="header"] {display: none !important;}
+.css-1dp5vir {display: none !important;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
