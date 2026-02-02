@@ -1,0 +1,31 @@
+{
+  "project": "Tommy",
+  "path": "/root/projects/client-work/Tommy",
+  "lastUpdated": "2026-02-01T19:52:05.065Z",
+  "milestones": [
+    {
+      "id": "tommy-streamlit-authentifizierung-mi-ml45q7rd",
+      "project": "Tommy",
+      "title": "Streamlit Authentifizierung mit Rollen",
+      "type": "pattern",
+      "content": "Pattern für einfache Streamlit-Authentifizierung mit Rollen:\n\n```python\nimport streamlit as st\nimport os\n\ndef get_password(key):\n    \"\"\"Lädt Passwort aus Secrets oder Umgebungsvariablen.\"\"\"\n    try:\n        return st.secrets.get(key, os.environ.get(key))\n    except:\n        return os.environ.get(key)\n\nUSERS = {\n    \"admin\": {\"password\": get_password(\"ADMIN_PASSWORD\"), \"role\": \"admin\"},\n    \"user\": {\"password\": get_password(\"USER_PASSWORD\"), \"role\": \"user\"},\n}\n\ndef check_password(username, password):\n    return username in USERS and USERS[username][\"password\"] == password\n\ndef require_auth():\n    if not st.session_state.get(\"authenticated\", False):\n        login_form()\n        st.stop()\n\ndef login_form():\n    username = st.text_input(\"Benutzername\")\n    password = st.text_input(\"Passwort\", type=\"password\")\n    if st.button(\"Anmelden\"):\n        if check_password(username, password):\n            st.session_state[\"authenticated\"] = True\n            st.session_state[\"username\"] = username\n            st.rerun()\n```\n\nPasswörter über Umgebungsvariablen setzen (nicht im Code!).",
+      "tags": [
+        "type:pattern",
+        "streamlit",
+        "authentication",
+        "login",
+        "roles",
+        "security"
+      ],
+      "status": "working",
+      "created": "2026-02-01",
+      "updated": "2026-02-01",
+      "commands": [
+        "streamlit run app.py --server.port 8501"
+      ],
+      "files": [
+        "/root/projects/client-work/Tommy/app/auth.py"
+      ]
+    }
+  ]
+}
